@@ -7,6 +7,7 @@
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
+            "lambda:InvokeFunction",
             "dynamodb:GetItem",
             "dynamodb:Query",
             "dynamodb:PutItem",
