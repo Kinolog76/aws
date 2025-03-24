@@ -1,49 +1,51 @@
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 
-// DynamoDB Client
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.TARGET_TABLE;
+const TABLE_NAME = process.env.TARGET_TABLE || 'Events';
 
 exports.handler = async (event) => {
     try {
-        const body = JSON.parse(event.body);
-        const { principalId, content } = body;
-        
-        if (!principalId || !content) {
+        const requestBody = JSON.parse(event.body || '{}');
+        const { principalId, content } = requestBody;
+
+        if (!principalId || !content || typeof principalId !== 'number' || typeof content !== 'object') {
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: "Invalid request. 'principalId' and 'content' are required." })
+                body: JSON.stringify({
+                    message: "'principalId' (number) and 'content' (object) are required."
+                })
             };
         }
 
-        const timestamp = new Date().toISOString();
-        const id = uuidv4();
-
-        const item = {
-            id,
-            principalId,
-            createdAt: timestamp,
+        const newEvent = {
+            id: uuidv4(),
+            principalId: principalId,
+            createdAt: new Date().toISOString(),
             body: content
         };
 
-        // Save the event to DynamoDB
         await dynamoDB.put({
             TableName: TABLE_NAME,
-            Item: item
+            Item: newEvent
         }).promise();
 
-        // Return the response
         return {
             statusCode: 201,
-            body: JSON.stringify({ statusCode: 201, event: item })
+            body: JSON.stringify({
+                statusCode: 201,
+                event: newEvent
+            })
         };
     } catch (error) {
-        console.error("Error saving event:", error);
+        console.error("Error saving to DynamoDB:", error);
 
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Failed to save the event." })
+            body: JSON.stringify({
+                message: "Internal server error.",
+                error: error.message
+            })
         };
     }
 };
