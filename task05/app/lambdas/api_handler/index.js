@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const TABLE_NAME = process.env.TARGET_TABLE || 'Events';
+const TABLE_NAME = process.env.target_table;
 
 exports.handler = async (event) => {
     try {
@@ -12,8 +12,9 @@ exports.handler = async (event) => {
         if (!principalId || !content || typeof principalId !== 'number' || typeof content !== 'object') {
             return {
                 statusCode: 400,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    message: "'principalId' (number) and 'content' (object) are required."
+                    message: "'principalId' (number) and 'content' (object) are required fields."
                 })
             };
         }
@@ -30,20 +31,24 @@ exports.handler = async (event) => {
             Item: newEvent
         }).promise();
 
+        console.log("Successfully saved event:", newEvent);
+
         return {
             statusCode: 201,
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 statusCode: 201,
                 event: newEvent
             })
         };
     } catch (error) {
-        console.error("Error saving to DynamoDB:", error);
+        console.error("Error saving the event to DynamoDB:", error);
 
         return {
             statusCode: 500,
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                message: "Internal server error.",
+                message: "Internal server error occurred while saving the event.",
                 error: error.message
             })
         };
