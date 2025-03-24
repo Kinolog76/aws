@@ -1,5 +1,5 @@
-import AWS from "aws-sdk";
-import { v4 as uuidv4 } from "uuid";
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.target_table;
