@@ -22,16 +22,20 @@ exports.handler = async (event) => {
       id: uuidv4(),
       itemKey,
       modificationTime,
+      updatedAttribute: "value"
     };
 
     if (eventName === "INSERT" && dynamodb.NewImage) {
       auditItem.newValue = {
         key: dynamodb.NewImage.key.S,
-        value: Number(dynamodb.NewImage.value.N),
+        value: Number(dynamodb.NewImage.value.N)
       };
     } else if (eventName === "MODIFY" && dynamodb.OldImage && dynamodb.NewImage) {
       auditItem.oldValue = Number(dynamodb.OldImage.value.N);
-      auditItem.newValue = Number(dynamodb.NewImage.value.N);
+      auditItem.newValue = {
+        key: dynamodb.NewImage.key.S,
+        value: Number(dynamodb.NewImage.value.N)
+      };
     } else {
       console.log(`Skipping unsupported event type: ${eventName}`);
       return null;
